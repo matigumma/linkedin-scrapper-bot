@@ -2,7 +2,56 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import Linkout from "linkout-scraper";
+import * as helpers from "linkout-scraper/dist/linkedin/linkedin.common.service.js";
 import puppeteer from 'puppeteer';
+
+/* login with u + p func */
+async function loginWithUserAndPass(page, cdp, data) {
+  try {
+    await page.goto("https://www.linkedin.com/login");
+
+      await page.waitForSelector("#username");
+
+      await helpers.timer(4000);
+
+      await (await page.$("#username"))?.type(data.user, { delay: 30 });
+
+      await helpers.timer(500);
+
+      await (await page.$("#password"))?.type(data.password, { delay: 30 });
+
+      await helpers.timer(1000);
+      await (await page.$("button[type=submit]"))?.click();
+
+      await helpers.timer(3000);
+
+      await page.waitForSelector(".search-global-typeahead__input", {
+        timeout: 30000,
+      });
+
+      const token = await page.cookies();
+
+      const li_token = token?.find((t) => t.name === "li_at")?.value;
+
+      await page.setCookie({
+        name: "li_at",
+        value: li_token,
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+        priority: "Medium",
+        path: "/",
+        domain: ".linkedin.com"
+      });
+  
+      await helpers.timer(3000);
+  
+      // await page.goto("https://www.linkedin.com/feed/");
+  } catch (error) {
+    console.error("An error occurred: Could not login to linkedin, please update you credentials: ", error);
+  }
+}
+
 
 async function scrapeProfileData(page) {
   var profile = {
@@ -200,10 +249,19 @@ export async function processPostRequest(prompt) {
     // add ghost-cursor for maximum safety
     await Linkout.tools.loadCursor(page, true);
   
-    // Login with LinkedIn
-    await Linkout.services.login(page, cdp, {
-      cookie: process.env.COOKIE,
-    });
+    
+
+    if(global.authMethod === 'cookie') {
+      // Login with LinkedIn
+      await Linkout.services.login(page, cdp, {
+        cookie: process.env.COOKIE,
+      });
+    }else if(global.authMethod === 'login') {
+      await loginWithUserAndPass(page, cdp, {
+        user: process.env.LI_USER, 
+        password: process.env.LI_PASS
+      });
+    }
   
     // Visit a LinkedIn profile
     await Linkout.services.visit(page, cdp, {
