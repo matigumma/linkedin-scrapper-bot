@@ -72,11 +72,7 @@ client.on('ready',async (c) => {
     // console.log(emojisIndex)
 })
 
-// ante cada mensaje que se envie en el servidor:
-client.on('messageCreate', async (message) => {
-    // si es un bot no responder
-    if (message.author.bot) return
-    
+async function analizarMensaje(message) {
     const matcher = NewMatcher(message.content.length <= 500 ? "map" : "regex");
     
     let extractedEmojis = [];
@@ -107,12 +103,75 @@ client.on('messageCreate', async (message) => {
       } catch (error) {
         console.error(error); // Log any errors that occur during the reaction process
       }
+}
+
+// ante cada mensaje que se envie en el servidor:
+client.on('messageCreate', async (message) => {
+    // si es un bot no responder
+    if (message.author.bot) return
+    // message channel id filter
+    if (message.channel.id !== process.env.CHANNEL_ID) return
+
+    try {
+        await analizarMensaje(message)
+    } catch (error) {
+        console.error(error)
+    }
 
     // if (message.content === 'Hola' || message.content === 'hola') {
     //     message.reply('Hola!!')
     //     message.react('\<:svelte:1018942335112978572>')
     // }
 })
+
+client.on('messageCreate',async (message) => {
+    if (message.author.bot) return
+    if (message.channel.id !== process.env.CHANNEL_ID) return
+
+    const channel = client.channels.cache.get(process.env.CHANNEL_ID);
+
+    // Asegúrate de que el canal es un canal de texto
+    // if (channel.type !== 'GUILD_TEXT') {
+    //     console.error('El script solo funciona con canales de texto.');
+    //     return;
+    // }
+
+
+    if(message.content.includes('!analizarTodos') && message.member.roles.cache.some(role => role.name === 'SUPER-MOD')) {
+
+        console.log('analizando')
+        let messageCount = 0;
+    
+        // Función para recorrer todos los mensajes del canal
+        const fetchMessages = async (id) => {
+            const options = { limit: 100 };
+            if (id) {
+                options.before = id;
+            }
+        
+            const messages = await channel.messages.fetch(options);
+            if (messages.size > 0) {
+                messages.forEach(message => {
+                    console.log(`Mensaje: ${message.content}`);
+                    
+                    analizarMensaje(message)
+                    
+                    messageCount++;
+                });
+        
+                // Recursivamente fetch más mensajes si hay más
+                const lastMessage = messages.last();
+                fetchMessages(lastMessage.id);
+            } else {
+                console.log(`Análisis completado. Número total de mensajes: ${messageCount}`);
+            }
+        };
+    
+        await fetchMessages();
+    }
+
+  });
+  
 
 
 client.login(process.env.TOKEN)
