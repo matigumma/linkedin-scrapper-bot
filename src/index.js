@@ -118,10 +118,6 @@ client.on('messageCreate', async (message) => {
         console.error(error)
     }
 
-    // if (message.content === 'Hola' || message.content === 'hola') {
-    //     message.reply('Hola!!')
-    //     message.react('\<:svelte:1018942335112978572>')
-    // }
 })
 
 client.on('messageCreate',async (message) => {
@@ -129,13 +125,6 @@ client.on('messageCreate',async (message) => {
     if (message.channel.id !== process.env.CHANNEL_ID) return
 
     const channel = client.channels.cache.get(process.env.CHANNEL_ID);
-
-    // Asegúrate de que el canal es un canal de texto
-    // if (channel.type !== 'GUILD_TEXT') {
-    //     console.error('El script solo funciona con canales de texto.');
-    //     return;
-    // }
-
 
     if(message.content.includes('!analizarTodos') && message.member.roles.cache.some(role => role.name === 'SUPER-MOD')) {
 
