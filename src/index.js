@@ -52,7 +52,6 @@ const emojisIndex = {
 }
 
 // para el proximo paso, voy a hacer un indice de roles que se van a poder asignar
-// const rolesIndex = ["Frontend", "Backend"];
 
 const {Client, IntentsBitField} = require('discord.js')
 
@@ -76,22 +75,13 @@ async function analizarMensaje(message) {
     const matcher = NewMatcher(message.content.length <= 500 ? "map" : "regex");
     
     let extractedEmojis = [];
-    // const extractedRoles = [];
 
     extractedEmojis = matcher.GetEmojis(message.content, emojisIndex);
     console.log(extractedEmojis)
 
-    // Loop through rolesIndex to find matching roles
-    // rolesIndex.forEach(role => {
-    //     if (message.content.toLowerCase().includes(role.toLowerCase())) {
-    //         extractedRoles.push(role);
-    //     }
-    // })
-
     // Returning the response in JSON format
     const response = {
         emojis: extractedEmojis,
-        // roles: extractedRoles
     };
 
     try {
