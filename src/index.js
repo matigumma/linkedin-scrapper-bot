@@ -102,28 +102,16 @@ client.on('messageCreate', async (message) => {
     // message channel id filter
     if (message.channel.id !== process.env.CHANNEL_ID) return
 
-    try {
-        await analizarMensaje(message)
-    } catch (error) {
-        console.error(error)
-    }
-
-})
-
-client.on('messageCreate',async (message) => {
-    if (message.author.bot) return
-    if (message.channel.id !== process.env.CHANNEL_ID) return
-
     const channel = client.channels.cache.get(process.env.CHANNEL_ID);
-
+    
     if(message.content.includes('!analizarTodos') && message.member.roles.cache.some(role => role.name === 'SUPER-MOD')) {
-
+    
         console.log('analizando')
         let messageCount = 0;
     
         // Función para recorrer todos los mensajes del canal
         const fetchMessages = async (id) => {
-            const options = { limit: 100 };
+            const options = { limit: 1 };
             if (id) {
                 options.before = id;
             }
@@ -147,10 +135,16 @@ client.on('messageCreate',async (message) => {
         };
     
         await fetchMessages();
+    } else if(message.content.includes('!memberlist') && message.member.roles.cache.some(role => role.name === 'SUPER-MOD'))  {
+        console.log('memberlist')
+    } else {
+        try {
+            await analizarMensaje(message)
+        } catch (error) {
+            console.error(error)
+        }
     }
 
-  });
-  
-
+})
 
 client.login(process.env.TOKEN)
